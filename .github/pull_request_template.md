@@ -1,5 +1,5 @@
 <!--
-Thanks for contributing to the Amplitude Experiment Javascript SDK! 🎉
+Thanks for contributing to the Amplitude Experiment Javascript Client SDK! 🎉
 
 Please fill out the following sections to help us quickly review your pull request.
 -->
