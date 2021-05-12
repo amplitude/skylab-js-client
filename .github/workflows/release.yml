@@ -44,7 +44,7 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Build
-        run: lerna exec yarn
+        run: npx lerna exec yarn
 
       - name: Test
         run: yarn test
