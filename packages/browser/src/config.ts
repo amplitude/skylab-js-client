@@ -10,9 +10,9 @@ export interface SkylabConfig {
   debug?: boolean;
 
   /**
-   * Set to true to view enrollment requests in the UI debugger
+   * Set to true to view assignment requests in the UI debugger
    */
-  debugEnrollmentRequests?: boolean;
+  debugAssignmentRequests?: boolean;
 
   /**
    * The default fallback variant for all {@link SkylabClient.getVariant} calls.
@@ -58,7 +58,7 @@ export interface SkylabConfig {
  | **Option**       | **Default**                       |
  |------------------|-----------------------------------|
  | **debug**        | false                             |
- | **debugEnrollmentRequests** | false                  |
+ | **debugAssignmentRequests** | false                  |
  | **fallbackVariant**         | ""                     |
  | **instanceName** | `"$default_instance"`             |
  | **isServerSide**            | false                  |
@@ -71,7 +71,7 @@ export interface SkylabConfig {
  */
 export const Defaults: SkylabConfig = {
   debug: false,
-  debugEnrollmentRequests: false,
+  debugAssignmentRequests: false,
   fallbackVariant: '',
   instanceName: '$default_instance',
   isServerSide: false,

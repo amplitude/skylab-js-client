@@ -14,7 +14,6 @@ import { Storage } from './types/storage';
 import { HttpClient } from './types/transport';
 import { SkylabUser } from './types/user';
 import { Variant, Variants } from './types/variant';
-import { base36Id } from './util/base36Id';
 import { urlSafeBase64Encode } from './util/base64';
 import { normalizeInstanceName } from './util/normalize';
 import { randomString } from './util/randomstring';
@@ -30,12 +29,11 @@ export class SkylabClient implements Client {
   protected readonly storageNamespace: string;
   protected readonly httpClient: HttpClient;
   protected readonly debug: boolean;
-  protected readonly debugEnrollmentRequests: boolean;
+  protected readonly debugAssignmentRequests: boolean;
 
   protected config: SkylabConfig;
   protected user: SkylabUser;
   protected contextProvider: ContextProvider;
-  protected enrollmentId: string;
 
   /**
    * Creates a new SkylabClient instance.
@@ -57,7 +55,7 @@ export class SkylabClient implements Client {
     this.storage = new LocalStorage(this.storageNamespace);
 
     this.debug = this.config.debug;
-    this.debugEnrollmentRequests = this.config.debugEnrollmentRequests;
+    this.debugAssignmentRequests = this.config.debugAssignmentRequests;
   }
 
   /**
@@ -75,7 +73,6 @@ export class SkylabClient implements Client {
    */
   public async start(user: SkylabUser): Promise<SkylabClient> {
     this.user = user || {};
-    this.loadEnrollmentId();
     this.storage.load();
     if (this.config.initialFlags && this.config.preferInitialFlags) {
       // initial flags take precedent over local storage until flags are fetched
@@ -109,22 +106,6 @@ export class SkylabClient implements Client {
     return this;
   }
 
-  private loadEnrollmentId() {
-    try {
-      this.enrollmentId = localStorage.getItem(this.config.storageKey);
-    } catch (e) {
-      // pass
-    }
-    if (!this.enrollmentId) {
-      this.enrollmentId = base36Id();
-      try {
-        localStorage.setItem(this.config.storageKey, this.enrollmentId);
-      } catch (e) {
-        // pass
-      }
-    }
-  }
-
   protected async fetchAll(): Promise<SkylabClient> {
     if (!this.apiKey) {
       return this;
@@ -133,12 +114,12 @@ export class SkylabClient implements Client {
       const userContext = this.addContext(this.user);
       const encodedContext = urlSafeBase64Encode(JSON.stringify(userContext));
       let queryString = '';
-      let debugEnrollmentRequestsParam;
-      if (this.debugEnrollmentRequests) {
-        debugEnrollmentRequestsParam = `d=${randomString(8)}`;
+      let debugAssignmentRequestsParam;
+      if (this.debugAssignmentRequests) {
+        debugAssignmentRequestsParam = `d=${randomString(8)}`;
       }
-      if (debugEnrollmentRequestsParam) {
-        queryString = '?' + debugEnrollmentRequestsParam;
+      if (debugAssignmentRequestsParam) {
+        queryString = '?' + debugAssignmentRequestsParam;
       }
       const endpoint = `${this.config.serverUrl}/sdk/vardata/${encodedContext}${queryString}`;
       const headers = {
