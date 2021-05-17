@@ -72,15 +72,11 @@ export class SkylabClient implements Client {
    * @returns A promise that resolves when the async request for variants is complete.
    */
   public async start(user: SkylabUser): Promise<SkylabClient> {
-    this.user = user || {};
-    this.storage.load();
-    if (this.config.initialFlags && this.config.preferInitialFlags) {
-      // initial flags take precedent over local storage until flags are fetched
-      for (const [flagKey, value] of Object.entries(this.config.initialFlags)) {
-        this.storage.put(flagKey, this._convertVariant(value));
-      }
-    }
-    return this.fetchAll();
+    return this.startWithTimeoutAndRetries(
+      user,
+      this.config.fetchTimeoutMillis,
+      // this.config.fetchRetries, // TODO: background retries
+    );
   }
 
   /**
@@ -91,7 +87,8 @@ export class SkylabClient implements Client {
    */
   public async setUser(user: SkylabUser): Promise<SkylabClient> {
     this.user = user;
-    return this.fetchAll();
+    await this.fetchAllWithTimeout(this.config.fetchTimeoutMillis);
+    return this;
   }
 
   /**
@@ -106,10 +103,50 @@ export class SkylabClient implements Client {
     return this;
   }
 
-  protected async fetchAll(): Promise<SkylabClient> {
+  protected async startWithTimeoutAndRetries(
+    user: SkylabUser,
+    timeoutMillis: number,
+    // retries: number, // TODO: background retries
+  ): Promise<SkylabClient> {
+    // Set the user and load local storage
+    this.user = user || {};
+    this.storage.load();
+    if (this.config.initialFlags && this.config.preferInitialFlags) {
+      // initial flags take precedent over local storage until flags are fetched
+      for (const [flagKey, value] of Object.entries(this.config.initialFlags)) {
+        this.storage.put(flagKey, this._convertVariant(value));
+      }
+    }
+
+    // Don't even try to fetch variants if API key is not set
     if (!this.apiKey) {
       return this;
     }
+
+    // Do fetch, parse response body, and store.
+    try {
+      const response = await this.fetchAllWithTimeout(timeoutMillis);
+      const json = await response.json();
+      this.storage.clear();
+      for (const flag of Object.keys(json)) {
+        this.storage.put(flag, {
+          value: json[flag].key,
+          payload: json[flag].payload,
+        });
+      }
+      this.storage.save();
+      if (this.debug) {
+        console.debug('[Skylab] Received and stored flags:', json);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return this;
+  }
+
+  protected async fetchAllWithTimeout(
+    timeoutMillis: number,
+  ): Promise<Response> {
     try {
       const userContext = this.addContext(this.user);
       const encodedContext = urlSafeBase64Encode(JSON.stringify(userContext));
@@ -125,24 +162,15 @@ export class SkylabClient implements Client {
       const headers = {
         Authorization: `Api-Key ${this.apiKey}`,
       };
-      const response = await this.httpClient.request(endpoint, 'GET', headers);
-      const json = await response.json();
-      this.storage.clear();
-      for (const flag of Object.keys(json)) {
-        this.storage.put(flag, {
-          value: json[flag].key,
-          payload: json[flag].payload,
-        });
-      }
-      this.storage.save();
-
-      if (this.debug) {
-        console.debug('[Skylab] Received and stored flags:', json);
-      }
+      return await this.httpClient.requestWithTimeout(
+        timeoutMillis,
+        endpoint,
+        'GET',
+        headers,
+      );
     } catch (e) {
-      console.error(e);
+      return Promise.reject(e);
     }
-    return this;
   }
 
   private addContext(user: SkylabUser) {

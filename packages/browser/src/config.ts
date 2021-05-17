@@ -50,6 +50,17 @@ export interface SkylabConfig {
    * The local storage key to use for storing metadata
    */
   storageKey?: 'amp-sl-meta';
+
+  /**
+   * The request timeout, in milliseconds, used when fetching variants triggered by calling start() or setUser().
+   */
+  fetchTimeoutMillis: number;
+
+  /**
+   * The number of retries to attempt if fetching variants triggered by start() or setUser() fails.
+   * // TODO: Implment background retries.
+   */
+  fetchRetries: number;
 }
 
 /**
@@ -78,4 +89,6 @@ export const Defaults: SkylabConfig = {
   preferInitialFlags: false,
   serverUrl: 'https://api.lab.amplitude.com',
   storageKey: 'amp-sl-meta',
+  fetchTimeoutMillis: 1000,
+  fetchRetries: 5,
 };
