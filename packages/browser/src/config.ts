@@ -57,10 +57,16 @@ export interface SkylabConfig {
   fetchTimeoutMillis: number;
 
   /**
-   * The number of retries to attempt if fetching variants triggered by start() or setUser() fails.
-   * // TODO: Implment background retries.
+   * Whether or not to retry fetching variants if the initial request fails. Retries will be scheduled at an
+   * interval defined by `fetchRetryIntervalMillis`.
    */
-  fetchRetries: number;
+  fetchRetry: boolean;
+
+  /**
+   * The interval at which to retry if the intitial variant fetch fails. This should be greater than
+   * `fetchTimeoutMillis`.
+   */
+  fetchRetryIntervalMillis: number;
 }
 
 /**
@@ -76,6 +82,9 @@ export interface SkylabConfig {
  | **preferInitialFlags**      | false                  |
  | **serverUrl**    | `"https://api.lab.amplitude.com"` |
  | **storageKey**    | `"amp-sl-meta"` |
+ | **fetchTimeoutMillis**        | `500`                |
+ | **fetchRetry**                | `true`               |
+ | **fetchRetryIntervalMillis**  | `5000`               |
 
  *
  * @category Configuration
@@ -89,6 +98,7 @@ export const Defaults: SkylabConfig = {
   preferInitialFlags: false,
   serverUrl: 'https://api.lab.amplitude.com',
   storageKey: 'amp-sl-meta',
-  fetchTimeoutMillis: 1000,
-  fetchRetries: 5,
+  fetchTimeoutMillis: 500,
+  fetchRetry: true,
+  fetchRetryIntervalMillis: 5000,
 };
