@@ -58,13 +58,19 @@ export interface SkylabConfig {
 
   /**
    * Whether or not to retry fetching variants if the initial request fails. Retries will be scheduled at an
-   * interval defined by `fetchRetryIntervalMillis`.
+   * interval defined by `fetchRetryIntervalMillis`, with a timeout defined by `fetchRetryTimeoutMillis`.
    */
   fetchRetry: boolean;
 
   /**
-   * The interval at which to retry if the intitial variant fetch fails. This should be greater than
-   * `fetchTimeoutMillis`.
+   * The request timeout for retrying fetch requests. Should be less than or eqial to the
+   * `fetchRetryIntervalMillis` config.
+   */
+  fetchRetryTimeoutMillis: number;
+
+  /**
+   * The interval at which to retry if fetching variants fails. Should be greater than or equal to the
+   * `fetchRetryTimeoutMillis` config.
    */
   fetchRetryIntervalMillis: number;
 }
@@ -84,7 +90,8 @@ export interface SkylabConfig {
  | **storageKey**    | `"amp-sl-meta"` |
  | **fetchTimeoutMillis**        | `500`                |
  | **fetchRetry**                | `true`               |
- | **fetchRetryIntervalMillis**  | `5000`               |
+ | **fetchRetryTimeoutMillis**   | `10000`              |
+ | **fetchRetryIntervalMillis**  | `10000`              |
 
  *
  * @category Configuration
@@ -100,5 +107,6 @@ export const Defaults: SkylabConfig = {
   storageKey: 'amp-sl-meta',
   fetchTimeoutMillis: 500,
   fetchRetry: true,
-  fetchRetryIntervalMillis: 5000,
+  fetchRetryTimeoutMillis: 10000,
+  fetchRetryIntervalMillis: 10000,
 };

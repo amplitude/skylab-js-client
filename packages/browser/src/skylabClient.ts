@@ -66,6 +66,7 @@ export class SkylabClient implements Client {
    * 2. Asynchronously fetch all variants with the provided user context.
    * 3. Fall back on local storage (or initialFlags if `preferInitialFlags` is true) while the async
    *    request for variants is continuing.
+   * 4. If the fetch fails and the retry flag is set, start the retry interval until success.
    *
    * If you are using the `initialFlags` config option to pre-load this SDK from the
    * server, you do not need to call `start`.
@@ -74,7 +75,6 @@ export class SkylabClient implements Client {
    * @returns A promise that resolves when the async request for variants is complete.
    */
   public async start(user: SkylabUser): Promise<SkylabClient> {
-    // Set the user and load local storage
     this.user = user || {};
     this.storage.load();
     if (this.config.initialFlags && this.config.preferInitialFlags) {
@@ -83,7 +83,6 @@ export class SkylabClient implements Client {
         this.storage.put(flagKey, this._convertVariant(value));
       }
     }
-    // Do fetch, parse response body, and store.
     try {
       await this.fetchAll(
         user,
@@ -99,6 +98,9 @@ export class SkylabClient implements Client {
   /**
    * Sets the user context. Skylab will continue to serve variation assignments
    * from the old user context until new variants are fetched.
+   *
+   * If the fetch triggered by this function fails, the retry interval will be started
+   * if the flag is set and continue until the fetch succeeds.
    * @param user The user context for variants. See {@link SkylabUser} for more details.
    * @returns A promise that resolves when the async request for variants is complete.
    */
@@ -228,12 +230,14 @@ export class SkylabClient implements Client {
     this.retry = window.setInterval(
       async function () {
         try {
-          await this.fetchAll(this.user, false);
+          await this.fetchAll(
+            this.user,
+            this.config.fetchRetryTimeoutMillis,
+            false,
+          );
         } catch (e) {
           console.error(e);
-          return;
         }
-        this.stopRetries();
       }.bind(this), // Need to bind this to give access to SkylabClient as this
       this.config.fetchRetryIntervalMillis,
     );
