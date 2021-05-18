@@ -10,7 +10,7 @@
   "scripts": {
     "build": "rm -rf dist && rollup -c",
     "docs": "typedoc",
-    "lint": "eslint . --ignore-path ../../.eslintignore",
+    "lint": "eslint . --ignore-path ../../.eslintignore && prettier -c . --ignore-path ../../.prettierignore",
     "test": "jest",
     "version": "yarn docs && git add ../../docs",
     "prepublish": "yarn build"

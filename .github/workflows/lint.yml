@@ -23,9 +23,5 @@ jobs:
     - name: Install
       run: yarn install --frozen-lockfile
 
-    - name: Lint - prettier
-      run: yarn run lint:prettier
-
-    - name: Lint - eslint
-      if: always()
-      run: yarn run lint:eslint
+    - name: Lint
+      run: yarn lint
