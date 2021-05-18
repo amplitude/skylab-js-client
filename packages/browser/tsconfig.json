@@ -3,11 +3,12 @@
   "include": ["src/**/*.ts", "package.json"],
   "typedocOptions": {
     "name": "Skylab JS Client Documentation",
-    "entryPoints": [
-      "./src/index.ts"
-    ],
+    "entryPoints": ["./src/index.ts"],
     "categoryOrder": [
-      "Core Usage", "Configuration", "Context Provider", "Types"
+      "Core Usage",
+      "Configuration",
+      "Context Provider",
+      "Types"
     ],
     "categorizeByGroup": false,
     "disableSources": true,

@@ -14,4 +14,4 @@ example, [es6-promise](https://github.com/stefanpenner/es6-promise)).
 
 ## Getting Started
 
-Refer to the [Javascript SDK Documentation](https://amplitude-lab.readme.io/docs/install-the-javascript-sdk) to get started.
+Refer to the [Javascript SDK Documentation](https://amplitude-lab.readme.io/docs/javascript-client-sdk) to get started.
