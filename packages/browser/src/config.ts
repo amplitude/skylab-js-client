@@ -54,25 +54,25 @@ export interface SkylabConfig {
   /**
    * The request timeout, in milliseconds, used when fetching variants triggered by calling start() or setUser().
    */
-  fetchTimeoutMillis: number;
+  fetchTimeoutMillis?: number;
 
   /**
    * Whether or not to retry fetching variants if the initial request fails. Retries will be scheduled at an
    * interval defined by `fetchRetryIntervalMillis`, with a timeout defined by `fetchRetryTimeoutMillis`.
    */
-  fetchRetry: boolean;
+  fetchRetry?: boolean;
 
   /**
    * The request timeout for retrying fetch requests. Should be less than or equal to the
    * `fetchRetryIntervalMillis` config.
    */
-  fetchRetryTimeoutMillis: number;
+  fetchRetryTimeoutMillis?: number;
 
   /**
    * The interval at which to retry if fetching variants fails. Should be greater than or equal to the
    * `fetchRetryTimeoutMillis` config.
    */
-  fetchRetryIntervalMillis: number;
+  fetchRetryIntervalMillis?: number;
 }
 
 /**
@@ -105,7 +105,7 @@ export const Defaults: SkylabConfig = {
   preferInitialFlags: false,
   serverUrl: 'https://api.lab.amplitude.com',
   storageKey: 'amp-sl-meta',
-  fetchTimeoutMillis: 500,
+  fetchTimeoutMillis: 1,
   fetchRetry: true,
   fetchRetryTimeoutMillis: 10000,
   fetchRetryIntervalMillis: 10000,
