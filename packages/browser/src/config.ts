@@ -63,7 +63,7 @@ export interface SkylabConfig {
   fetchRetry: boolean;
 
   /**
-   * The request timeout for retrying fetch requests. Should be less than or eqial to the
+   * The request timeout for retrying fetch requests. Should be less than or equal to the
    * `fetchRetryIntervalMillis` config.
    */
   fetchRetryTimeoutMillis: number;
