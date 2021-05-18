@@ -107,6 +107,7 @@ export class SkylabClient implements Client {
   public async setUser(user: SkylabUser): Promise<SkylabClient> {
     this.user = user;
     try {
+      console.debug('user = ', user);
       await this.fetchAll(
         user,
         this.config.fetchTimeoutMillis,
@@ -176,6 +177,9 @@ export class SkylabClient implements Client {
     const headers = {
       Authorization: `Api-Key ${this.apiKey}`,
     };
+    if (this.debug) {
+      console.debug('[Skylab] Fetch variants for user: ', userContext);
+    }
     const response = await this.httpClient.requestWithTimeout(
       timeoutMillis,
       endpoint,
