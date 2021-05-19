@@ -153,7 +153,6 @@ export class SkylabClient implements Client {
       this.storeVariants(variants);
       return variants;
     } catch (e) {
-      console.error(e);
       if (retry) {
         this.startRetries();
       }
@@ -241,6 +240,7 @@ export class SkylabClient implements Client {
           this.config.fetchRetryTimeoutMillis,
           false,
         );
+        this.stopRetries();
       } catch (e) {
         console.error(e);
       }

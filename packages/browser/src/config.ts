@@ -105,7 +105,7 @@ export const Defaults: SkylabConfig = {
   preferInitialFlags: false,
   serverUrl: 'https://api.lab.amplitude.com',
   storageKey: 'amp-sl-meta',
-  fetchTimeoutMillis: 5000,
+  fetchTimeoutMillis: 10000,
   fetchRetry: true,
   fetchRetryTimeoutMillis: 10000,
   fetchRetryIntervalMillis: 10000,
