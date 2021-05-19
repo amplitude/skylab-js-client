@@ -27,7 +27,7 @@ const timeout = (
     }, timeoutMillis);
     promise.then(resolve, reject);
   });
-}
+};
 
 const request: HttpClient['request'] = (
   requestUrl: string,
