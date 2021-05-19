@@ -14,11 +14,15 @@ const fetch = globalThis.fetch || unfetch;
  * https://github.com/github/fetch/issues/175#issuecomment-284787564
  */
 function timeout(
-  timeoutMillis: number,
   promise: Promise<Response>,
+  timeoutMillis?: number,
 ): Promise<Response> {
+  // Dont timeout if timeout is null or invalid
+  if (timeoutMillis == null || timeoutMillis <= 0) {
+    return promise;
+  }
   return new Promise(function (resolve, reject) {
-    setTimeout(function () {
+    globalThis.setTimeout(function () {
       reject(Error('Request timeout after ' + timeoutMillis + ' milliseconds'));
     }, timeoutMillis);
     promise.then(resolve, reject);
@@ -30,25 +34,16 @@ const request: HttpClient['request'] = (
   method: string,
   headers: Record<string, string>,
   data?: Record<string, string>,
+  timeoutMillis?: number,
 ): Promise<Response> => {
-  return fetch(requestUrl, {
-    method,
-    headers,
-    body: data && JSON.stringify(data),
-  });
+  return timeout(
+    fetch(requestUrl, {
+      method,
+      headers,
+      body: data && JSON.stringify(data),
+    }),
+    timeoutMillis,
+  );
 };
 
-const requestWithTimeout: HttpClient['requestWithTimeout'] = (
-  timeoutMillis: number,
-  requestUrl: string,
-  method: string,
-  headers: Record<string, string>,
-  data?: Record<string, string>,
-): Promise<Response> => {
-  return timeout(timeoutMillis, request(requestUrl, method, headers, data));
-};
-
-export const FetchHttpClient: HttpClient = {
-  request,
-  requestWithTimeout,
-};
+export const FetchHttpClient: HttpClient = { request };

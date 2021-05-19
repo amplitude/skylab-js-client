@@ -35,7 +35,7 @@ export class SkylabClient implements Client {
   protected user: SkylabUser;
   protected contextProvider: ContextProvider;
 
-  private retry = 0;
+  private retries: any = null;
 
   /**
    * Creates a new SkylabClient instance.
@@ -140,8 +140,8 @@ export class SkylabClient implements Client {
       throw Error('Skylab API key is empty');
     }
 
-    // Proactively stop retries if active in order to avoid unecessary API requests.
-    // A failure will restart the retry
+    // Proactively stop retries if active in order to avoid unecessary API
+    // requests. A failure will restart the retry
     if (retry) {
       this.stopRetries();
     }
@@ -182,11 +182,12 @@ export class SkylabClient implements Client {
     if (this.debug) {
       console.debug('[Skylab] Fetch variants for user: ', userContext);
     }
-    const response = await this.httpClient.requestWithTimeout(
-      timeoutMillis,
+    const response = await this.httpClient.request(
       endpoint,
       'GET',
       headers,
+      null,
+      timeoutMillis,
     );
     if (this.debug) {
       console.debug('[Skylab] Received fetch response:', response);
@@ -225,7 +226,7 @@ export class SkylabClient implements Client {
       console.debug('[Skylab] Retry fetch all');
     }
     // Non-zero retry means we already have a retry interval in progress.
-    if (this.retry != 0) {
+    if (this.retries) {
       if (this.debug) {
         console.debug('[Skylab] Retry fetch interval already in progress');
       }
@@ -233,7 +234,7 @@ export class SkylabClient implements Client {
     }
     // Run fetchAll for the current user at an interval defined by the
     // fetchRetryIntervalMillis config.
-    this.retry = window.setInterval(async () => {
+    this.retries = globalThis.setInterval(async () => {
       try {
         await this.fetchAll(
           this.user,
@@ -247,8 +248,8 @@ export class SkylabClient implements Client {
   }
 
   protected stopRetries(): void {
-    window.clearInterval(this.retry);
-    this.retry = 0;
+    globalThis.clearInterval(this.retries);
+    this.retries = null;
   }
 
   private addContext(user: SkylabUser) {
