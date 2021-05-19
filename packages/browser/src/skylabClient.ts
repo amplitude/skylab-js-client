@@ -107,7 +107,6 @@ export class SkylabClient implements Client {
   public async setUser(user: SkylabUser): Promise<SkylabClient> {
     this.user = user;
     try {
-      console.debug('user = ', user);
       await this.fetchAll(
         user,
         this.config.fetchTimeoutMillis,
@@ -138,24 +137,27 @@ export class SkylabClient implements Client {
   ): Promise<Variants> {
     // Don't even try to fetch variants if API key is not set
     if (!this.apiKey) {
-      return Promise.reject(Error('Skylab API key is empty'));
+      throw Error('Skylab API key is empty');
     }
+
+    // Proactively stop retries if active in order to avoid unecessary API requests.
+    // A failure will restart the retry
+    if (retry) {
+      this.stopRetries();
+    }
+
     try {
       // Do fetch, parse response body, and store.
       const response = await this.doFetch(user, timeoutMillis);
       const variants = await this.parseResponse(response);
       this.storeVariants(variants);
-      // We may have a situation where setUser() is called while retries are in
-      // progress. Avoid potentially hitting the endpoint twice by proactively
-      // stoping the retry interval.
-      this.stopRetries();
-      return Promise.resolve(variants);
+      return variants;
     } catch (e) {
       console.error(e);
       if (retry) {
         this.startRetries();
       }
-      return Promise.reject(e);
+      throw e;
     }
   }
 
@@ -166,7 +168,7 @@ export class SkylabClient implements Client {
     const userContext = this.addContext(user);
     const encodedContext = urlSafeBase64Encode(JSON.stringify(userContext));
     let queryString = '';
-    let debugAssignmentRequestsParam;
+    let debugAssignmentRequestsParam: string;
     if (this.debugAssignmentRequests) {
       debugAssignmentRequestsParam = `d=${randomString(8)}`;
     }
@@ -231,20 +233,17 @@ export class SkylabClient implements Client {
     }
     // Run fetchAll for the current user at an interval defined by the
     // fetchRetryIntervalMillis config.
-    this.retry = window.setInterval(
-      async function () {
-        try {
-          await this.fetchAll(
-            this.user,
-            this.config.fetchRetryTimeoutMillis,
-            false,
-          );
-        } catch (e) {
-          console.error(e);
-        }
-      }.bind(this), // Need to bind this to give access to SkylabClient as this
-      this.config.fetchRetryIntervalMillis,
-    );
+    this.retry = window.setInterval(async () => {
+      try {
+        await this.fetchAll(
+          this.user,
+          this.config.fetchRetryTimeoutMillis,
+          false,
+        );
+      } catch (e) {
+        console.error(e);
+      }
+    }, this.config.fetchRetryIntervalMillis);
   }
 
   protected stopRetries(): void {
