@@ -13,10 +13,10 @@ const fetch = globalThis.fetch || unfetch;
  * Copied from:
  * https://github.com/github/fetch/issues/175#issuecomment-284787564
  */
-function timeout(
+const timeout = (
   promise: Promise<Response>,
   timeoutMillis?: number,
-): Promise<Response> {
+): Promise<Response> => {
   // Dont timeout if timeout is null or invalid
   if (timeoutMillis == null || timeoutMillis <= 0) {
     return promise;

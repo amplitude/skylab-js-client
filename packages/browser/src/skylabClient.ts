@@ -35,7 +35,7 @@ export class SkylabClient implements Client {
   protected user: SkylabUser;
   protected contextProvider: ContextProvider;
 
-  private retries: any = null;
+  private retryHandle: any = null;
 
   /**
    * Creates a new SkylabClient instance.
@@ -225,7 +225,7 @@ export class SkylabClient implements Client {
       console.debug('[Skylab] Retry fetch all');
     }
     // Non-zero retry means we already have a retry interval in progress.
-    if (this.retries) {
+    if (this.retryHandle) {
       if (this.debug) {
         console.debug('[Skylab] Retry fetch interval already in progress');
       }
@@ -233,7 +233,7 @@ export class SkylabClient implements Client {
     }
     // Run fetchAll for the current user at an interval defined by the
     // fetchRetryIntervalMillis config.
-    this.retries = globalThis.setInterval(async () => {
+    this.retryHandle = globalThis.setInterval(async () => {
       try {
         await this.fetchAll(
           this.user,
@@ -248,8 +248,8 @@ export class SkylabClient implements Client {
   }
 
   protected stopRetries(): void {
-    globalThis.clearInterval(this.retries);
-    this.retries = null;
+    globalThis.clearInterval(this.retryHandle);
+    this.retryHandle = null;
   }
 
   private addContext(user: SkylabUser) {
