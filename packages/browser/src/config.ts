@@ -88,7 +88,7 @@ export interface SkylabConfig {
  | **preferInitialFlags**      | false                  |
  | **serverUrl**    | `"https://api.lab.amplitude.com"` |
  | **storageKey**    | `"amp-sl-meta"` |
- | **fetchTimeoutMillis**        | `500`                |
+ | **fetchTimeoutMillis**        | `5000`                |
  | **fetchRetry**                | `true`               |
  | **fetchRetryTimeoutMillis**   | `10000`              |
  | **fetchRetryIntervalMillis**  | `10000`              |
