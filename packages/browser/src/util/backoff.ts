@@ -30,7 +30,6 @@ export class Backoff {
   }
 
   public cancel(): void {
-    console.debug('[Skylab] Cancel retries');
     this.done = true;
     clearTimeout(this.timeoutHandle);
   }
@@ -45,7 +44,6 @@ export class Backoff {
     }
     this.timeoutHandle = setTimeout(async () => {
       try {
-        console.debug('[Skylab] Retry attempt ', attempt);
         await fn();
       } catch (e) {
         const nextAttempt = attempt + 1;
