@@ -1,4 +1,4 @@
-import { stringToUtf8Array, urlSafeBase64Encode } from 'src/util/base64';
+import { stringToUtf8Array, urlSafeBase64Encode } from '../../src/util/base64';
 
 test('stringToUtf8Array', () => {
   expect(stringToUtf8Array('My 🚀 is full of 🦎')).toEqual([

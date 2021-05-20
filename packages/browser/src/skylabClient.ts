@@ -14,6 +14,7 @@ import { Storage } from './types/storage';
 import { HttpClient } from './types/transport';
 import { SkylabUser } from './types/user';
 import { Variant, Variants } from './types/variant';
+import { Backoff } from './util/backoff';
 import { urlSafeBase64Encode } from './util/base64';
 import { normalizeInstanceName } from './util/normalize';
 import { randomString } from './util/randomstring';
@@ -34,6 +35,9 @@ export class SkylabClient implements Client {
   protected config: SkylabConfig;
   protected user: SkylabUser;
   protected contextProvider: ContextProvider;
+
+  private retriesEnabled: boolean;
+  private retriesBackoff: Backoff;
 
   /**
    * Creates a new SkylabClient instance.
@@ -56,6 +60,8 @@ export class SkylabClient implements Client {
 
     this.debug = this.config.debug;
     this.debugAssignmentRequests = this.config.debugAssignmentRequests;
+
+    this.retriesEnabled = this.config.fetchRetries > 0;
   }
 
   /**
@@ -64,6 +70,7 @@ export class SkylabClient implements Client {
    * 2. Asynchronously fetch all variants with the provided user context.
    * 3. Fall back on local storage (or initialFlags if `preferInitialFlags` is true) while the async
    *    request for variants is continuing.
+   * 4. If the fetch fails and the retry flag is set, start the retry interval until success.
    *
    * If you are using the `initialFlags` config option to pre-load this SDK from the
    * server, you do not need to call `start`.
@@ -80,18 +87,42 @@ export class SkylabClient implements Client {
         this.storage.put(flagKey, this._convertVariant(value));
       }
     }
-    return this.fetchAll();
+    try {
+      await this.fetchAll(
+        user,
+        this.config.fetchTimeoutMillis,
+        this.retriesEnabled,
+      );
+    } catch (e) {
+      console.error(e);
+    }
+    return this;
   }
 
   /**
    * Sets the user context. Skylab will continue to serve variation assignments
    * from the old user context until new variants are fetched.
+   *
+   * If the fetch triggered by this function fails, the retry interval will be started
+   * if the flag is set and continue until the fetch succeeds.
    * @param user The user context for variants. See {@link SkylabUser} for more details.
    * @returns A promise that resolves when the async request for variants is complete.
    */
   public async setUser(user: SkylabUser): Promise<SkylabClient> {
+    if (this.debug) {
+      console.debug('[Skylab] Set user: ', user);
+    }
     this.user = user;
-    return this.fetchAll();
+    try {
+      await this.fetchAll(
+        user,
+        this.config.fetchTimeoutMillis,
+        this.retriesEnabled,
+      );
+    } catch (e) {
+      console.error(e);
+    }
+    return this;
   }
 
   /**
@@ -106,43 +137,121 @@ export class SkylabClient implements Client {
     return this;
   }
 
-  protected async fetchAll(): Promise<SkylabClient> {
+  protected async fetchAll(
+    user: SkylabUser,
+    timeoutMillis: number,
+    retry: boolean,
+  ): Promise<Variants> {
+    // Don't even try to fetch variants if API key is not set
     if (!this.apiKey) {
-      return this;
+      throw Error('Skylab API key is empty');
     }
-    try {
-      const userContext = this.addContext(this.user);
-      const encodedContext = urlSafeBase64Encode(JSON.stringify(userContext));
-      let queryString = '';
-      let debugAssignmentRequestsParam;
-      if (this.debugAssignmentRequests) {
-        debugAssignmentRequestsParam = `d=${randomString(8)}`;
-      }
-      if (debugAssignmentRequestsParam) {
-        queryString = '?' + debugAssignmentRequestsParam;
-      }
-      const endpoint = `${this.config.serverUrl}/sdk/vardata/${encodedContext}${queryString}`;
-      const headers = {
-        Authorization: `Api-Key ${this.apiKey}`,
-      };
-      const response = await this.httpClient.request(endpoint, 'GET', headers);
-      const json = await response.json();
-      this.storage.clear();
-      for (const flag of Object.keys(json)) {
-        this.storage.put(flag, {
-          value: json[flag].key,
-          payload: json[flag].payload,
-        });
-      }
-      this.storage.save();
 
-      if (this.debug) {
-        console.debug('[Skylab] Received and stored flags:', json);
-      }
-    } catch (e) {
-      console.error(e);
+    if (this.debug) {
+      console.debug('[Skylab] Fetch all: retry=' + retry);
     }
-    return this;
+
+    // Proactively cancel retries if active in order to avoid unecessary API
+    // requests. A new failure will restart the retries.
+    if (retry) {
+      this.stopRetries();
+    }
+
+    try {
+      const response = await this.doFetch(user, timeoutMillis);
+      const variants = await this.parseResponse(response);
+      this.storeVariants(variants);
+      return variants;
+    } catch (e) {
+      if (retry) {
+        this.startRetries(user);
+      }
+      throw e;
+    }
+  }
+
+  protected async doFetch(
+    user: SkylabUser,
+    timeoutMillis: number,
+  ): Promise<Response> {
+    const userContext = this.addContext(user);
+    const encodedContext = urlSafeBase64Encode(JSON.stringify(userContext));
+    let queryString = '';
+    let debugAssignmentRequestsParam: string;
+    if (this.debugAssignmentRequests) {
+      debugAssignmentRequestsParam = `d=${randomString(8)}`;
+    }
+    if (debugAssignmentRequestsParam) {
+      queryString = '?' + debugAssignmentRequestsParam;
+    }
+    const endpoint = `${this.config.serverUrl}/sdk/vardata/${encodedContext}${queryString}`;
+    const headers = {
+      Authorization: `Api-Key ${this.apiKey}`,
+    };
+    if (this.debug) {
+      console.debug('[Skylab] Fetch variants for user: ', userContext);
+    }
+    const response = await this.httpClient.request(
+      endpoint,
+      'GET',
+      headers,
+      null,
+      timeoutMillis,
+    );
+    if (this.debug) {
+      console.debug('[Skylab] Received fetch response:', response);
+    }
+    return response;
+  }
+
+  protected async parseResponse(response: Response): Promise<Variants> {
+    const json = await response.json();
+    const variants: Variants = {};
+    for (const flag of Object.keys(json)) {
+      variants[flag] = {
+        value: json[flag].key,
+        payload: json[flag].payload,
+      };
+    }
+    if (this.debug) {
+      console.debug('[Skylab] Received variants:', variants);
+    }
+    return variants;
+  }
+
+  protected storeVariants(variants: Variants): void {
+    this.storage.clear();
+    for (const key in variants) {
+      this.storage.put(key, variants[key]);
+    }
+    this.storage.save();
+    if (this.debug) {
+      console.debug('[Skylab] Stored flags:', variants);
+    }
+  }
+
+  protected async startRetries(user: SkylabUser): Promise<void> {
+    if (this.config.fetchRetries == 0) {
+      return;
+    }
+    if (this.debug) {
+      console.debug('[Skylab] Retry fetch all');
+    }
+    this.retriesBackoff = new Backoff(
+      this.config.fetchRetries,
+      this.config.fetchRetryBackoffMinMillis,
+      this.config.fetchRetryBackoffMaxMillis,
+      this.config.fetchRetryBackoffScalar,
+    );
+    this.retriesBackoff.start(async () => {
+      await this.fetchAll(user, this.config.fetchRetryTimeoutMillis, false);
+    });
+  }
+
+  protected stopRetries(): void {
+    if (this.retriesBackoff != null) {
+      this.retriesBackoff.cancel();
+    }
   }
 
   private addContext(user: SkylabUser) {
