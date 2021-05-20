@@ -57,22 +57,31 @@ export interface SkylabConfig {
   fetchTimeoutMillis?: number;
 
   /**
-   * Whether or not to retry fetching variants if the initial request fails. Retries will be scheduled at an
-   * interval defined by `fetchRetryIntervalMillis`, with a timeout defined by `fetchRetryTimeoutMillis`.
+   * The number of retries to attempt before failing
    */
-  fetchRetry?: boolean;
+  fetchRetries?: number;
 
   /**
-   * The request timeout for retrying fetch requests. Should be less than or equal to the
-   * `fetchRetryIntervalMillis` config.
+   * Retry backoff minimum (starting backoff delay) in milliseconds. The minimum backoff is scaled by
+   * `fetchRetryBackoffScalar` after each retry failure.
+   */
+  fetchRetryBackoffMinMillis: number;
+
+  /**
+   * Retry backoff maximum in milliseconds. If the scaled backoff is greater than the max, the max is
+   * used for all subsequent retries.
+   */
+  fetchRetryBackoffMaxMillis: number;
+
+  /**
+   * Scales the minimum backoff exponentially.
+   */
+  fetchRetryBackoffScalar: number;
+
+  /**
+   * The request timeout for retrying fetch requests.
    */
   fetchRetryTimeoutMillis?: number;
-
-  /**
-   * The interval at which to retry if fetching variants fails. Should be greater than or equal to the
-   * `fetchRetryTimeoutMillis` config.
-   */
-  fetchRetryIntervalMillis?: number;
 }
 
 /**
@@ -88,10 +97,12 @@ export interface SkylabConfig {
  | **preferInitialFlags**      | false                  |
  | **serverUrl**    | `"https://api.lab.amplitude.com"` |
  | **storageKey**    | `"amp-sl-meta"` |
- | **fetchTimeoutMillis**        | `5000`                |
- | **fetchRetry**                | `true`               |
- | **fetchRetryTimeoutMillis**   | `10000`              |
- | **fetchRetryIntervalMillis**  | `10000`              |
+ | **fetchTimeoutMillis**    | `10000` |
+ | **fetchRetries**    | `8` |
+ | **fetchRetryBackoffMinMillis**    | `500` |
+ | **fetchRetryBackoffMaxMillis**    | `10000` |
+ | **fetchRetryBackoffScalar**    | `1.5` |
+ | **fetchRetryTimeoutMillis**    | `10000` |
 
  *
  * @category Configuration
@@ -106,7 +117,9 @@ export const Defaults: SkylabConfig = {
   serverUrl: 'https://api.lab.amplitude.com',
   storageKey: 'amp-sl-meta',
   fetchTimeoutMillis: 10000,
-  fetchRetry: true,
+  fetchRetries: 8,
+  fetchRetryBackoffMinMillis: 500,
+  fetchRetryBackoffMaxMillis: 10000,
+  fetchRetryBackoffScalar: 1.5,
   fetchRetryTimeoutMillis: 10000,
-  fetchRetryIntervalMillis: 10000,
 };
