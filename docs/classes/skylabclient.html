@@ -3,8 +3,8 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>SkylabClient | Skylab JS Client Documentation - v1.0.2</title>
-	<meta name="description" content="Documentation for Skylab JS Client Documentation - v1.0.2">
+	<title>SkylabClient | Skylab JS Client Documentation - v1.1.0</title>
+	<meta name="description" content="Documentation for Skylab JS Client Documentation - v1.1.0">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<style type="text/css">:root {
   --color-background: #fdfdfd;
@@ -2674,7 +2674,7 @@ img {
 		<div class="container">
 			<div class="table-wrap">
 				<div class="table-cell">
-					<strong><a href="../index.html">Skylab JS Client Documentation - v1.0.2</a></strong>
+					<strong><a href="../index.html">Skylab JS Client Documentation - v1.1.0</a></strong>
 				</div>
 				<div class="table-cell" id="tsd-widgets">
 					<div id="tsd-filter">
@@ -2948,6 +2948,8 @@ img {
 								<p>Sets the user context. Skylab will continue to serve variation assignments
 								from the old user context until new variants are fetched.</p>
 							</div>
+							<p>If the fetch triggered by this function fails, the retry interval will be started
+							if the flag is set and continue until the fetch succeeds.</p>
 						</div>
 						<h4 class="tsd-parameters-title">Parameters</h4>
 						<ul class="tsd-parameters">
@@ -2982,6 +2984,7 @@ img {
 									<li>Asynchronously fetch all variants with the provided user context.</li>
 									<li>Fall back on local storage (or initialFlags if <code>preferInitialFlags</code> is true) while the async
 									request for variants is continuing.</li>
+									<li>If the fetch fails and the retry flag is set, start the retry interval until success.</li>
 								</ol>
 							</div>
 							<p>If you are using the <code>initialFlags</code> config option to pre-load this SDK from the
