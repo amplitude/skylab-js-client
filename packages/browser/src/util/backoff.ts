@@ -1,4 +1,4 @@
-import { safeGlobal } from '../util/global';
+import { safeGlobal } from './global';
 
 export class Backoff {
   private readonly attempts: number;
