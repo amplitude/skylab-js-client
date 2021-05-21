@@ -28,8 +28,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - run: |
-          git fetch --prune --unshallow --tags
+
+      # Needed for lerna version to determine last tag
+      - name: Fetch
+        run: git fetch --prune --unshallow --tags
 
       - name: Cache Node Modules
         uses: actions/cache@v2
@@ -56,12 +58,6 @@ jobs:
           git config --global user.name amplitude-sdk-bot
           git config --global user.email amplitude-sdk-bot@users.noreply.github.com
 
-      - name: DEBUG
-        run: |
-          git fetch origin
-          git describe
-          git status
-
       - name: Release (Dry Run)
         if: ${{ github.event.inputs.dryRun == 'true'}}
         env:
@@ -87,9 +83,3 @@ jobs:
             --loglevel silly \
             --yes
           yarn lerna publish from-git --yes --loglevel silly
-
-      - name: DEBUG
-        run: |
-          git fetch origin
-          git describe
-          git status
