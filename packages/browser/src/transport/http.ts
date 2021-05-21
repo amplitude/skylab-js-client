@@ -6,8 +6,9 @@
 import unfetch from 'unfetch';
 
 import { HttpClient } from '../types/transport';
+import { safeGlobal } from '../util/global';
 
-const fetch = globalThis.fetch || unfetch;
+const fetch = safeGlobal.fetch || unfetch;
 
 /*
  * Copied from:
@@ -22,7 +23,7 @@ const timeout = (
     return promise;
   }
   return new Promise(function (resolve, reject) {
-    globalThis.setTimeout(function () {
+    safeGlobal.setTimeout(function () {
       reject(Error('Request timeout after ' + timeoutMillis + ' milliseconds'));
     }, timeoutMillis);
     promise.then(resolve, reject);
