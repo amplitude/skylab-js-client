@@ -64,6 +64,7 @@ jobs:
             --conventional-commits \
             --no-push \
             --no-git-tag-version \
+            --loglevel silly \
             --yes
 
       - name: Release
@@ -75,5 +76,6 @@ jobs:
           yarn lerna version -m "chore(release): publish %s" \
             --conventional-commits \
             --create-release github \
+            --loglevel silly \
             --yes
-          yarn lerna publish from-git --yes
+          yarn lerna publish from-git --yes --loglevel silly
