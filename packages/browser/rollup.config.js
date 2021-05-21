@@ -19,7 +19,7 @@ const browserConfig = {
   treeshake: {
     moduleSideEffects: 'no-external',
   },
-  external: ['http', 'https', 'querystring', 'url'],
+  external: [],
   plugins: [
     replace({ BUILD_BROWSER: true }),
     resolve(),

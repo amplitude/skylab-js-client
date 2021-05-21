@@ -1,3 +1,5 @@
+import { safeGlobal } from './global';
+
 export class Backoff {
   private readonly attempts: number;
   private readonly min: number;
@@ -42,7 +44,7 @@ export class Backoff {
     if (this.done) {
       return;
     }
-    this.timeoutHandle = setTimeout(async () => {
+    this.timeoutHandle = safeGlobal.setTimeout(async () => {
       try {
         await fn();
       } catch (e) {

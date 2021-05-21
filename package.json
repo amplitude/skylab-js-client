@@ -3,7 +3,7 @@
   "version": "0.1.1",
   "description": "Javascript Client SDK for Amplitude Skylab",
   "scripts": {
-    "build": "yarn workspace browser build",
+    "build": "yarn workspace @amplitude/skylab-js-client build",
     "lint": "lerna run lint",
     "test": "jest",
     "start": "yarn workspace browser-demo start"
