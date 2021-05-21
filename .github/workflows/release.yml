@@ -62,7 +62,6 @@ jobs:
         if: ${{ github.event.inputs.dryRun == 'true'}}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           yarn lerna version -m "chore(release): publish %s" \
             --conventional-commits \
@@ -71,11 +70,16 @@ jobs:
             --loglevel silly \
             --yes
 
+      - name: Setup NPM Token
+        if: ${{ github.event.inputs.dryRun == 'false'}}
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} > .npmrc
+
       - name: Release
         if: ${{ github.event.inputs.dryRun == 'false'}}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           yarn lerna version -m "chore(release): publish %s" \
             --conventional-commits \
