@@ -88,6 +88,6 @@ jobs:
 
       - name: DEBUG
         run: |
-          git fetch
+          git fetch origin
           git describe
           git status
