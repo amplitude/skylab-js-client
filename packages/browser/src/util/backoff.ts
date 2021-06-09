@@ -50,14 +50,8 @@ export class Backoff {
       } catch (e) {
         const nextAttempt = attempt + 1;
         if (nextAttempt < this.attempts) {
-          console.error('[Skylab] Retry ' + attempt + ' failed: ', e);
           const nextDelay = Math.min(delay * this.scalar, this.max);
           this.backoff(fn, nextAttempt, nextDelay);
-        } else {
-          console.error(
-            '[Skylab] Retries failed after ' + this.attempts + ' attempts: ',
-            e,
-          );
         }
       }
     }, delay);

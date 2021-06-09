@@ -198,6 +198,9 @@ export class SkylabClient implements Client {
       null,
       timeoutMillis,
     );
+    if (response.status != 200) {
+      throw Error(`Received error response: ${response.status}`);
+    }
     if (this.debug) {
       console.debug('[Skylab] Received fetch response:', response);
     }
