@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [1.1.2](https://github.com/amplitude/skylab-js-client/compare/v1.1.1...v1.1.2) (2021-07-02)
+
+
+### Bug Fixes
+
+* make backoff config optional ([535fec7](https://github.com/amplitude/skylab-js-client/commit/535fec7ebe08491ff9fc4521ebdec0806b301015))
+
+
+
+
+
 ## [1.1.1](https://github.com/amplitude/skylab-js-client/compare/v1.1.0...v1.1.1) (2021-06-09)
 
 
