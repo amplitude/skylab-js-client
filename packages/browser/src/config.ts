@@ -65,18 +65,18 @@ export interface SkylabConfig {
    * Retry backoff minimum (starting backoff delay) in milliseconds. The minimum backoff is scaled by
    * `fetchRetryBackoffScalar` after each retry failure.
    */
-  fetchRetryBackoffMinMillis: number;
+  fetchRetryBackoffMinMillis?: number;
 
   /**
    * Retry backoff maximum in milliseconds. If the scaled backoff is greater than the max, the max is
    * used for all subsequent retries.
    */
-  fetchRetryBackoffMaxMillis: number;
+  fetchRetryBackoffMaxMillis?: number;
 
   /**
    * Scales the minimum backoff exponentially.
    */
-  fetchRetryBackoffScalar: number;
+  fetchRetryBackoffScalar?: number;
 
   /**
    * The request timeout for retrying fetch requests.
